@@ -6,7 +6,7 @@ module.exports = {
 	name: Events.InteractionCreate,
 	async execute(interaction : Interaction) {
     let client = interaction.client as MClient;
-		if (interaction.isChatInputCommand()) {
+		if (interaction.isChatInputCommand() || interaction.isContextMenuCommand()) {
 			const command = client.commands.get(interaction.commandName);
 
 			if (!command) {

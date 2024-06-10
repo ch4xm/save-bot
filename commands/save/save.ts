@@ -13,5 +13,9 @@ module.exports = {
             option.setName('channel')
             .setDescription('Channel to save image to')
             .setRequired(true)
-        )
+        ),
+
+    async execute(interaction: ChatInputCommandInteraction) {
+        interaction.reply("hello world")
+    }
 }

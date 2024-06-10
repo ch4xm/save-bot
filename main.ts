@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import {Client, GatewayIntentBits, Collection, SlashCommandBuilder, ChatInputCommandInteraction, ClientOptions, AutocompleteInteraction} from 'discord.js';
+import {Client, GatewayIntentBits, Collection, SlashCommandBuilder, ChatInputCommandInteraction, ClientOptions, AutocompleteInteraction, ContextMenuCommandInteraction} from 'discord.js';
 
 import dotenv from 'dotenv';
 
@@ -11,7 +11,7 @@ console.log("[INFO] Bot is starting up...");
 
 interface Command {
   data: SlashCommandBuilder
-  execute( interaction: ChatInputCommandInteraction): void
+  execute( interaction: ChatInputCommandInteraction | ContextMenuCommandInteraction): void
   autocomplete (interaction : AutocompleteInteraction) : void 
 }
 
@@ -70,4 +70,4 @@ for (const folder of commandFolders) {
 
 console.log("[INFO] Command files finished parsing.");
 
-client.login(process.env.token);
+client.login(process.env.DISCORD_TOKEN);
