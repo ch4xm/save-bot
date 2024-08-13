@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import modals from 'discord-modals';
 
-import {Client, GatewayIntentBits, Collection, SlashCommandBuilder, ChatInputCommandInteraction, ClientOptions, AutocompleteInteraction, ContextMenuCommandInteraction} from 'discord.js';
+import {Client, GatewayIntentBits, Collection, SlashCommandBuilder, ChatInputCommandInteraction, ClientOptions, AutocompleteInteraction, ContextMenuCommandInteraction, IntentsBitField} from 'discord.js';
 
 import dotenv from 'dotenv';
 
@@ -24,8 +25,8 @@ export class MClient extends Client {
 	}
 }
 
-const client = new MClient({ 
-	intents: [],
+export const client = new MClient({ 
+	intents: [IntentsBitField.Flags.Guilds],
   allowedMentions: { parse: ['users', 'roles'], repliedUser: true }
 });
 
@@ -70,4 +71,5 @@ for (const folder of commandFolders) {
 
 console.log("[INFO] Command files finished parsing.");
 
+modals(client);
 client.login(process.env.DISCORD_TOKEN);
