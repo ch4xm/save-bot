@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, TextChannel, EmbedBuilder, ChatInputCommandInteraction, AutocompleteInteraction, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder } from 'discord.js';
+import { SlashCommandBuilder, TextChannel, EmbedBuilder, ChatInputCommandInteraction, AutocompleteInteraction, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, DMChannel } from 'discord.js';
 import { Modal, TextInputComponent, SelectMenuComponent, showModal } from 'discord-modals'
 // import { ese}
 module.exports = {
@@ -21,17 +21,26 @@ module.exports = {
             //     .setRequired(true)
             //     .setAutocomplete(true)
         )
+        .addSubcommand(subcommand =>
+            subcommand
+            .setName('info')
+            .setDescription('Get the current server and channel configuration')
+        )
     ,
     async autocomplete(interaction: AutocompleteInteraction) {
 
     },
 
     async execute(interaction: ChatInputCommandInteraction) {
-        // if (interaction.commandName !== 'configure') {
-        //     return
-        // }
-        // console.log(interaction.client.guilds.cache)
-        // console.log(interaction.client.guilds.cache)
+        if (interaction.options.getSubcommand() === 'configure') {
+            this.configure(interaction)
+        }
+        else if (interaction.options.getSubcommand() === 'info') {
+            this.info(interaction)
+        }
+    },
+
+    async configure(interaction: ChatInputCommandInteraction) {
         const serverSelectBox = new StringSelectMenuBuilder()
             .setCustomId('server-select')
             .setPlaceholder('Select target server...')
@@ -121,7 +130,54 @@ module.exports = {
                 content: `Channel ${channel} selected for quicksave output!`,
                 components: [],
             });
-            (channel as TextChannel).send('Hello world!')
+            let userDM = interaction.user.dmChannel ?? await interaction.user.createDM();
+            let messages = (await userDM.messages.fetch())
+            let configMessage = Array.from(messages.filter(m => m.content.includes('Quicksave configuration channel set to') && m.author.id === interaction.client.user.id).sorted((a, b) => b.createdTimestamp - a.createdTimestamp).values())
+            console.log(configMessage, typeof configMessage[0], configMessage.length)
+            if (configMessage.length > 0) {
+                configMessage[0].edit(`Quicksave configuration channel set to ${channel}!`)
+            }
+            else{
+                userDM.send(`Quicksave configuration channel set to ${channel}!`)
+            }
         })
-    }
+    },
+    async info(interaction: ChatInputCommandInteraction) {
+        let userDM = interaction.user.dmChannel ?? await interaction.user.createDM();
+        let messages = await userDM.messages.fetch() 
+        let configMessage = Array.from(messages.filter(m => m.content.includes('Quicksave configuration channel set to') && m.author.id === interaction.client.user.id).sorted((a, b) => b.createdTimestamp - a.createdTimestamp).values())
+            // messages = Array.from(messages.filter(m => m.author.id === interaction.client.user.id))
+
+        if (configMessage.length > 0) {
+            const savedChannel = configMessage[0].content.split('Quicksave configuration channel set to ')[1]
+
+            interaction.reply({
+                content: `Quicksave configuration channel set to ${savedChannel}`,
+                ephemeral: true
+            })            
+        }
+        else {
+            interaction.reply({
+                embeds: [
+                    new EmbedBuilder().setTitle('No Quicksave Channel Set!').setDescription('Set a quicksave output channel using /quicksave configure!').setColor('#FF0000')
+                ],
+                ephemeral: true
+            })
+            return
+        }
+    },
+
+
+    // async getUserDM(interaction: ChatInputCommandInteraction) {
+    //     let userDM = interaction.user.dmChannel ?? await interaction.user.createDM();
+    //     return userDM
+    // },
+
+    // async getConfigMessage(interaction: ChatInputCommandInteraction) {
+    //     let userDM = this.getUserDM(interaction)
+    //     let messages = (await userDM.messages.fetch())
+    //     let configMessage = Array.from(messages.filter(m => m.content.includes('Quicksave configuration channel set to') && m.author.id === interaction.client.user.id).sorted((a, b) => b.createdTimestamp - a.createdTimestamp).values())
+    //     return configMessage
+    // }
+
 }

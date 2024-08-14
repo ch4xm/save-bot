@@ -10,8 +10,8 @@ module.exports = {
         .setType(ApplicationCommandType.Message),
 
     async execute(interaction: MessageContextMenuCommandInteraction) {
-        // let stickers = interaction.targetMessage.stickers
-        // console.log(stickers)
+        
+
         const attachments = (interaction.targetMessage.attachments.size > 0) ? interaction.targetMessage.attachments.map(attachment => attachment.url).join('\n') : null
         const links = [...interaction.targetMessage.content.matchAll(URL_REGEX)]
         let message: str = ''
@@ -21,24 +21,59 @@ module.exports = {
         if (attachments) {
             message += attachments
         }
-        // interaction.reply(client.channels.cache.toString(),)
-        // let channel: TextChannel = client.channels.cache.get('1040033223855591474')
-        // if (channel.isText()) {
-        //     channel.send('message')
-        // }
-        client.guilds.cache.forEach((guild: Guild) => {
-            console.log(guild.id)
-            guild.channels.fetch().then((channels) => {
-                channels.forEach((channel: TextChannel) => {
-                    console.log(channel.id, channel.name)
-                })
+
+
+        let userDM = interaction.user.dmChannel ?? await interaction.user.createDM()
+        let messages = await userDM.messages.fetch()
+        let configMessage = Array.from(messages.filter(m => m.content.includes('Quicksave configuration channel set to') && m.author.id === interaction.client.user.id).sort((a, b) => b.createdTimestamp - a.createdTimestamp).values())
+        let channelId = (configMessage.length > 0) ? configMessage[0].content.split('Quicksave configuration channel set to ')[1] : null
+        // console.log(channelId)
+        if (!channelId) {
+            interaction.reply({
+                embeds: [
+                    new EmbedBuilder().setTitle('No Quicksave Channel Set!').setDescription('Set a quicksave output channel using /quicksave configure!').setColor('#FF0000')
+                ],
+                ephemeral: true
             })
-            // guild.channels.cache.forEach((channel: TextChannel) => {
-                // console.log('channel', channel.id)
-            // })
-        })
-        // channel.send('message')
-        // client.channels.cache.get('1040033223855591474')
-        interaction.reply((message.length > 0) ? message : {embeds: [new EmbedBuilder().setTitle('Error').setDescription('No images found in target message!').setColor(0x50C878)]} )
+            return
+        }
+        const channel = await client.channels.fetch(channelId.replace('<#', '').replace('>!', ''))
+        if (!channel) {
+            interaction.reply({
+                embeds: [
+                    new EmbedBuilder().setTitle('Channel not found!').setDescription('Set a quicksave output channel using /quicksave configure!').setColor('#FF0000')
+                ],
+                ephemeral: true
+            })
+            return
+        }
+
+        if (!channel.isTextBased() || channel.isVoiceBased()) {
+            interaction.reply({
+                embeds: [
+                    new EmbedBuilder().setTitle('Selected channel not a text channel!').setDescription('Set a quicksave output channel using /quicksave configure!').setColor('#FF0000')
+                ] ,
+                ephemeral: true
+            })
+            return
+        }
+
+        if (message.length > 0) {
+            channel.send(message)
+            interaction.reply({
+                embeds: [
+                    new EmbedBuilder().setTitle('Success').setDescription(`Message sent to quicksave output channel ${channel}!`).setColor(0x50C878)
+                ],
+                ephemeral: true
+            })
+        }
+        else {
+            interaction.reply({
+                embeds: [
+                    new EmbedBuilder().setTitle('Error').setDescription(`No attachments found in target message!`).setColor(0xD2042D)
+                ],
+                ephemeral: true
+            })
+        }
     }
 }

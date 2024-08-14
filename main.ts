@@ -26,7 +26,7 @@ export class MClient extends Client {
 }
 
 export const client = new MClient({ 
-	intents: [IntentsBitField.Flags.Guilds],
+	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.DirectMessages],
   allowedMentions: { parse: ['users', 'roles'], repliedUser: true }
 });
 
